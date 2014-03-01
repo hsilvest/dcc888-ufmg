@@ -16,8 +16,8 @@ and you can download it as a tar.gz file from llvm.org, or download it
 using svn.
 
 ```$> svn co http://llvm.org/svn/llvm-project/llvm/tags/RELEASE_34/final llvm
-$> cd llvm/tools
-$> svn co http://llvm.org/svn/llvm-project/cfe/tags/RELEASE_34/final clang```
+```$> cd llvm/tools
+```$> svn co http://llvm.org/svn/llvm-project/cfe/tags/RELEASE_34/final clang
 
 ### Graphviz
 
@@ -31,9 +31,6 @@ This will generate makefiles that enable debugging.
 Now, if everything is alright, run:
 make
 
-after all add llvm/Debbug+Asserts/bin
-and           llvm/Debbug+Asserts/lib
-
-to PATH
+after all add llvm/Debbug+Asserts/bin and llvm/Debbug+Asserts/lib to PATH
 
 
