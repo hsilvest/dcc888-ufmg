@@ -1,4 +1,4 @@
-dcc888-ufmg
+DCC888-UFMG
 ===========
 
 # Code Analysis and Optimization - DCC888 (UFMG)
