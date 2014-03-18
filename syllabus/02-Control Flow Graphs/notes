@@ -1,0 +1,101 @@
+Control Flow Graphs
+
+Existe uma grande diferença entre como um desenvolvedor vê o codigo fonte e como o compilador o "vê". Para início de conversa, o codigo fonte é bem diferente do codigo de maquina, dessa forma, os compiladores geralmente representam programas como "Control Flow Graphs" ou CFG.
+
+Um fluxo de controle de dados é um grafo direcionado onde os nós desse grafo são blocos básicos, e existe uma aresta entre o bloco A e o bloco B se a execução do programa pode fluir de A para B.
+
+Para exemplificar vou utilizar um arcabouço de compilação chamado LLVM (Low Level Virtual Machine) para compilar uma função em C e representar a mesma em um CFG:
+
+void identity(int** a, int N) {
+	int i, j;
+ 	for (i = 0; i < N; i++) {
+ 		for (j = 0; j < N; j++) {
+ 			a[i][j] = 0;
+ 		}
+ 	}
+ 	for (i = 0; i < N; i++) {
+		 a[i][i] = 1;
+ 	}
+}
+
+OBS: as instruções de como instalar e configurar o llvm e suas dependecias podem ser encontradas no meu github https://github.com/hsilvest/dcc888-ufmg/blob/master/README.md
+
+Primeiro compilamos a função e geramos seu respectivo bytecode
+
+clang -c -emit-llvm identity.c -i identity.bc
+
+Em seguida usamos a ferramenta opt para visualizar o CFG
+
+opt -view-cfg identity.bc
+
+[ANEXAR IMAGEM DO CFG]
+
+O LLVM representa os programas através de sequencias de instruções chamadas bytecode, essas instruções não especificam uma unica maquina.
+Os blocos básicos, que são os nós no CFG são feitos de sequencias de bytecode. Blocos básicos são sequencincias maximais de instruções consectuvidas que respeitam as seguintes regras:
+- O fluxo de controle só pode entrar no bloco básico através da primeira intrução do bloco ( não existe pulos para o meio do bloco )
+- O controle sai do bloco se encontrar um branching no meio do caminho
+
+A primeira instrução de um bloco básico é chamado de lider, nós podemos identificar lider através de tres propriedadas:
+
+1. A primeira instrução do codigo intermediario
+2. Qualquer instrução que é alvo de um "jump"
+3. Qualquer instrução que segue imediatamente um "jump"
+
+Para cada lider o bloco basico consiste dele e de todas as proximas instruções até o proximo lider.
+
+Otimizações Locais
+
+Técnicas de otimização de codigo que trabalham no escopo de um bloco básico são chamados de otimizações locais.
+
+Exemplo: otimizações baseadas em DAG, otimizações Peephole e alocação local de registradores
+
+Técnicas de otimização que precisam analisar o CFG completo são chamadas de otimizações globais
+
+Otimizações baseada em DAG
+
+Nas DAG's ( Directed Acyclic Graph ) existe um nó na DAG para cada valor de entrada que aparece no bloco básico, existe uma aresta entre cada instrução do bloco básico, se a instrução A usa variaveis definidas nas instruçoes B,C,D, então existe aresta de A até D, se uma variavel é definida em um bloco básico mas não é usada dentro dele, então esse é um valor de saida.
+
+Exemplo:
+
+1: a = b + c         Nesse caso b,c e d são valores de entrada, pois não são definidos antes de serem utilizados
+2: b = a - d
+
+3: c = b + c         Nesse caso c e d são valores de saida, pois são definidos e não são utilizados no bloco básico
+4: d = a - d
+
+[Imagem da DAG no slide de CFG do página 13]
+
+Value Numbering
+
+A DAG pode ser otimizada utilizando expressões comuns, ou seja invés de criar um nó para cada elemento do bloco básico, verificamos primeiro se esse elemento ja existe, se existir apenas referenciamos o mesmo senão é criado o nó como de costume.
+
+Value Numbering permite que nós referenciemos a DAG semanticamente ao invés de contextualmente, conforme o slide 18 da lecture de CFG vimos que a instrução d = a - d ja foi representada na DAG por isso ela é passivel de uma otimização, ela pode por exemplo ser otimizada utilizando DCE ( Dead Code Elimination ) pois tem o mesmo valor semantico ( ver slide 19 ) além disso podem ser realizadas inumeras técnicas para encontrar expressões comuns, por exemplo identidades, associação e comutatividade. Ja que mencionaos DCE vamos entende-la um pouco melhor
+
+Nós podemos eliminar um nó utilizando DCE se e somente se: o nó não tem antecessores, ou seja, é um nó raiz; o nó não é marcado como nó de saida
+
+Identidades Algebricas
+
+– Identidades Aritmeticas: 
+   x + 0 = 0 + x = x; x * 1 = 1 * x = x; x – 0 = x; x/1 = x 
+–  Redução de Força: 
+•  x2 = x * x; 2 * x = x + x; x / 2 = x * 0.5 
+–  Constant folding: 
+•  evaluate expressions at compilaLon Lme, replacing each 
+expression by its value
+
+Reduction in strength opLmizes code by replacing some sequences of instrucLons by others, which can be computed more efficiently.
+
+
+PeepHole optimization
+
+a otimização PeepHole é bem simples, as instruções são examinas por janelas pequenas, e codigos redundantes são eliminados, "pulos" desnecessarios são refatorados
+
+exemplo:
+
+include é mais barato do que o add.
+
+addl $1, %edi -> incl %edi
+
+Local Register Allocation
+
+registradores são regiões de memória que tem um rápido acesso, porém eles existem em pequenas quantidades, uma técnica de otimização consiste em armazenar nos registradores as variaveis mais utilizadas pelo programa. (O compiladore geralmente precisa visualizar toda função ou todo o programa para executar a alocação por motivos óbvios, porém pode se fazer uma alocação local, ou seja enxergando apenas um bloco básico)
