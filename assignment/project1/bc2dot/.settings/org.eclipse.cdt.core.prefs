@@ -1,0 +1,6 @@
+eclipse.preferences.version=1
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.591302631/PATH/delimiter=\:
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.591302631/PATH/operation=replace
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.591302631/PATH/value=/bin\:/usr/lib/lightdm/lightdm\:/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/usr/games\:/usr/local/games\:/home/ampaiva/
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.591302631/append=true
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.591302631/appendContributed=true
